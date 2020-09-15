@@ -1,0 +1,201 @@
+apply plugin: 'groovy'
+//apply plugin: 'com.android.library'
+
+//apply plugin: 'maven'
+/*android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.3"
+}*/
+
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+buildscript {
+    repositories {
+        maven { url 'https://mirrors.tencent.com/nexus/repository/maven-public/' }
+        maven { url 'https://mirrors.tencent.com/repository/maven/thirdparty' }
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+    }
+}
+
+dependencies {
+    implementation gradleApi()
+    implementation localGroovy()
+
+    // transform依赖
+    // gradle 1.5
+//    implementation 'com.android.tools.build:transfrom-api:1.5.0'
+    // gradle 2.0开始
+    implementation 'com.android.tools.build:gradle:3.5.2'
+    implementation 'com.android.tools.build:gradle-api:3.5.2'
+
+
+    // asm依赖
+    implementation 'org.ow2.asm:asm:7.1'
+    implementation 'org.ow2.asm:asm-util:7.1'
+    implementation 'org.ow2.asm:asm-commons:7.1'
+
+}
+
+
+repositories {
+    mavenCentral()
+    jcenter()
+    google()
+}
+
+//以下是需要针对项目需要修改的配置内容
+//发布者的组织名称
+group = 'com.tencent.asm.plugin'
+// 版本号，下次更新是只需要更改版本号即可
+version = '0.0.2'
+
+//项目主页
+def siteUrl = ''
+//项目的版本控制地址
+def gitUrl = ''
+//发布到JCenter上的项目名字，必须填写
+def libName = "AsmLogPlugin"
+//文档连接
+def javaDocLinks = "https://github.com/tencentyun/TIC"
+//Bintray中Repository的名字
+def bintrayRepo = "maven"
+//应用的描述
+def bintrayDesc = "AsmLogPlugin for Android"
+
+//生成源文件
+/*task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}*/
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+//生成文档
+/*task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    //以下两个为项目中带有中文注释的支持
+    options.encoding "UTF-8"
+    options.charSet 'UTF-8'
+    options.author true
+    options.version true
+    options.links javaDocLinks
+    failOnError false
+}
+
+//文档打包成jar
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+//拷贝javadoc文件
+task copyDoc(type: Copy) {
+    from "${buildDir}/docs/"
+    into "docs"
+}
+
+
+task javadocCall(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocCallJar(type: Jar, dependsOn: javadocCall) {
+    classifier = 'javadoc'
+    from javadocCall.destinationDir
+}
+
+javadocCall {
+    options {
+        encoding "UTF-8"
+        charSet 'UTF-8'
+        author true
+        version true
+        links "http://docs.oracle.com/javase/7/docs/api"
+        title "AsmLogPlugin" 
+    }
+}*/
+//上传到jcenter所需要的源码文件
+artifacts {
+  //  archives javadocCallJar
+    archives sourcesJar
+}
+
+// 配置maven库，生成POM.xml文件
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            project {
+                packaging 'aar'
+                //项目名称和描述
+                name 'AsmLogPlugin for Android'
+                description 'AsmLogPlugin for Android'
+                url siteUrl
+                licenses {
+                    license {
+                        //开源协议,在bintray中创建仓库时选择的license为Apache-2.0，复制下面的就可以
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    //开发者的个人信息
+                    developer {
+                        id 'ilive'
+                        name 'ilive'
+                        email 'githubzt@gmail.com'
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+                }
+            }
+        }
+    }
+}
+
+//上传到jcenter
+bintray {
+    user = 'ilive' //properties.getProperty("bintray.user")
+    key = '2099d669773e6961a829becdc01aa7b4837a1d8e' //properties.getProperty("bintray.apikey")''
+    configurations = ['archives']
+    pkg {
+//        userOrg = bintrayUserOrg
+        repo = bintrayRepo
+        name = libName
+        desc =  bintrayDesc
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ["Apache-2.0"]
+        publish = true
+    }
+}
+
+/*uploadArchives {
+    repositories {
+        mavenDeployer {
+            //提交到远程服务器：
+            // repository(url: "http://www.xxx.com/repos") {
+            //    authentication(userName: "admin", password: "admin")
+            // }
+            //本地的Maven地址:当前工程下
+            repository(url: uri('./log-plugin'))
+        }
+    }
+
+}*/
+// 指定编译的编码 不然有中文的话会出现  ’编码GBK的不可映射字符‘
+/*
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}*/
